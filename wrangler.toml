@@ -1,0 +1,15 @@
+name = "filemanager"
+main = "worker.ts"
+compatibility_date = "2025-07-24"
+
+[assets]
+directory = "dist"
+html_handling = "single-page-application"
+
+[build]
+command = "npm run build"
+
+# 如需持久化存储，取消下面注释并创建 KV namespace:
+# [[kv_namespaces]]
+# binding = "DATA_KV"
+# id = "your-kv-namespace-id"
