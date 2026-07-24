@@ -1,4 +1,4 @@
-name = "filemanager"
+name = "storagelist"
 main = "worker.ts"
 compatibility_date = "2025-07-24"
 compatibility_flags = ["nodejs_compat"]
