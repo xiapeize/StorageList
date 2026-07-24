@@ -1,7 +1,7 @@
 name = "filemanager"
 main = "worker.ts"
 compatibility_date = "2025-07-24"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat_v2"]
 
 [assets]
 directory = "dist"
