@@ -9,21 +9,61 @@ interface JWTPayload {
   exp: number
 }
 
+// 纯 JavaScript base64 编解码，不依赖 btoa/atob（Cloudflare Workers 兼容）
+const BASE64_TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+function toBase64(bytes: Uint8Array): string {
+  let result = ''
+  const len = bytes.length
+  for (let i = 0; i < len; i += 3) {
+    const a = bytes[i]
+    const b = i + 1 < len ? bytes[i + 1] : 0
+    const c = i + 2 < len ? bytes[i + 2] : 0
+    result += BASE64_TABLE[a >> 2]
+    result += BASE64_TABLE[((a & 3) << 4) | (b >> 4)]
+    result += i + 1 < len ? BASE64_TABLE[((b & 15) << 2) | (c >> 6)] : '='
+    result += i + 2 < len ? BASE64_TABLE[c & 63] : '='
+  }
+  return result
+}
+
+function fromBase64(str: string): Uint8Array {
+  str = str.replace(/[^A-Za-z0-9+/=]/g, '')
+  const bytes = new Uint8Array((str.length * 3) / 4)
+  let pos = 0
+  for (let i = 0; i < str.length; i += 4) {
+    const a = BASE64_TABLE.indexOf(str[i])
+    const b = BASE64_TABLE.indexOf(str[i + 1])
+    const c = str[i + 2] !== '=' ? BASE64_TABLE.indexOf(str[i + 2]) : 0
+    const d = str[i + 3] !== '=' ? BASE64_TABLE.indexOf(str[i + 3]) : 0
+    bytes[pos++] = (a << 2) | (b >> 4)
+    if (str[i + 2] !== '=') bytes[pos++] = ((b & 15) << 4) | (c >> 2)
+    if (str[i + 3] !== '=') bytes[pos++] = ((c & 3) << 6) | d
+  }
+  return bytes.slice(0, pos)
+}
+
 function base64url(str: string): string {
-  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  const bytes = new TextEncoder().encode(str)
+  return toBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function base64urlFromBytes(bytes: Uint8Array): string {
+  return toBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 function base64urlDecode(str: string): string {
   str = str.replace(/-/g, '+').replace(/_/g, '/')
   while (str.length % 4) str += '='
-  return atob(str)
+  const bytes = fromBase64(str)
+  return new TextDecoder().decode(bytes)
 }
 
 async function hmacSign(data: string, secret: string): Promise<string> {
   const encoder = new TextEncoder()
   const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
-  return base64url(String.fromCharCode(...new Uint8Array(sig)))
+  return base64urlFromBytes(new Uint8Array(sig))
 }
 
 export function createToken(username: string): Promise<string> {

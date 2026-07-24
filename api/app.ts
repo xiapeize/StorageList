@@ -22,4 +22,10 @@ app.put('/api/auth/password', authMiddleware, changePasswordHandler)
 // 健康检查
 app.get('/api/health', (c) => c.json({ ok: true }))
 
+// 全局错误处理
+app.onError((err, c) => {
+  console.error('Unhandled error:', err)
+  return c.json({ error: err.message || '服务器内部错误' }, 500)
+})
+
 export default app
