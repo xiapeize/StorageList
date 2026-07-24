@@ -1,10 +1,11 @@
 name = "filemanager"
 main = "worker.ts"
 compatibility_date = "2025-07-24"
+compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "dist"
-html_handling = "single-page-application"
+not_found_handling = "single-page-application"
 
 [build]
 command = "npm run build"
