@@ -44,9 +44,9 @@ export const LoginPage: React.FC<Props> = ({ onLogin }) => {
             borderRadius: 10, display: 'inline-flex', alignItems: 'center',
             justifyContent: 'center', color: 'white', fontSize: 24, fontWeight: 700,
           }}>
-            F
+            S
           </div>
-          <h2 style={{ marginTop: 12, fontSize: 20, fontWeight: 600 }}>FileManager</h2>
+          <h2 style={{ marginTop: 12, fontSize: 20, fontWeight: 600 }}>StorageList</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>
             登录以管理你的存储
           </p>
@@ -71,7 +71,7 @@ export const LoginPage: React.FC<Props> = ({ onLogin }) => {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="p@ssw0rd"
+              placeholder="输入密码"
             />
           </div>
 

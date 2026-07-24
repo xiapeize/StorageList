@@ -8,8 +8,8 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-logo">F</div>
-        <span className="sidebar-title">FileManager</span>
+        <div className="sidebar-logo">S</div>
+        <span className="sidebar-title">StorageList</span>
       </div>
       <nav className="sidebar-nav">
         <div className="sidebar-section">存储挂载</div>
