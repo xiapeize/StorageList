@@ -60,10 +60,14 @@ function base64urlDecode(str: string): string {
 }
 
 async function hmacSign(data: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
-  return base64urlFromBytes(new Uint8Array(sig))
+  try {
+    const encoder = new TextEncoder()
+    const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
+    return base64urlFromBytes(new Uint8Array(sig))
+  } catch (e) {
+    throw new Error(`签名失败: ${e instanceof Error ? e.message : String(e)}`)
+  }
 }
 
 export function createToken(username: string): Promise<string> {
@@ -105,23 +109,28 @@ export async function authMiddleware(c: Context, next: Next) {
 }
 
 export async function loginHandler(c: Context) {
-  const body = await c.req.json<{ username: string; password: string }>()
-  const store = getStore()
-  const data = await store.load()
+  try {
+    const body = await c.req.json<{ username: string; password: string }>()
+    const store = getStore()
+    const data = await store.load()
 
-  const users = data.users || { admin: 'p@ssw0rd' }
+    const users = data.users || { admin: 'p@ssw0rd' }
 
-  if (!body?.username || !body?.password) {
-    return c.json({ error: '请输入用户名和密码' }, 400)
+    if (!body?.username || !body?.password) {
+      return c.json({ error: '请输入用户名和密码' }, 400)
+    }
+
+    const storedPassword = users[body.username]
+    if (!storedPassword || storedPassword !== body.password) {
+      return c.json({ error: '用户名或密码错误' }, 401)
+    }
+
+    const token = await createToken(body.username)
+    return c.json({ token, username: body.username })
+  } catch (e) {
+    console.error('Login error:', e)
+    return c.json({ error: `登录失败: ${e instanceof Error ? e.message : '未知错误'}` }, 500)
   }
-
-  const storedPassword = users[body.username]
-  if (!storedPassword || storedPassword !== body.password) {
-    return c.json({ error: '用户名或密码错误' }, 401)
-  }
-
-  const token = await createToken(body.username)
-  return c.json({ token, username: body.username })
 }
 
 export async function changePasswordHandler(c: Context) {

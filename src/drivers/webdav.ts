@@ -1,5 +1,23 @@
 import type { StorageDriver, FileItem } from './types';
 
+// 纯 JavaScript base64 编码，避免 btoa 兼容性问题
+function toBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let result = '';
+  const len = bytes.length;
+  for (let i = 0; i < len; i += 3) {
+    const a = bytes[i];
+    const b = i + 1 < len ? bytes[i + 1] : 0;
+    const c = i + 2 < len ? bytes[i + 2] : 0;
+    result += chars[a >> 2];
+    result += chars[((a & 3) << 4) | (b >> 4)];
+    result += i + 1 < len ? chars[((b & 15) << 2) | (c >> 6)] : '=';
+    result += i + 2 < len ? chars[c & 63] : '=';
+  }
+  return result;
+}
+
 export class WebDAVDriver implements StorageDriver {
   id: string;
   name: string;
@@ -19,7 +37,7 @@ export class WebDAVDriver implements StorageDriver {
   private get headers(): Record<string, string> {
     const h: Record<string, string> = { 'Depth': '1' };
     if (this.username) {
-      h['Authorization'] = 'Basic ' + btoa(`${this.username}:${this.password}`);
+      h['Authorization'] = 'Basic ' + toBase64(`${this.username}:${this.password}`);
     }
     return h;
   }
